@@ -4,14 +4,18 @@ pipeline {
     environment {
         IMAGE_NAME = 'sentiment-ai'
         REGISTRY = 'ghcr.io/satiix'
-        IMAGE_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        IMAGE_TAG = ''
     }
 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+                script {
+                    env.IMAGE_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
                 sh 'git log --oneline -5'
+                echo "IMAGE_TAG = ${env.IMAGE_TAG}"
             }
         }
 
@@ -43,7 +47,6 @@ pipeline {
         }
 
         stage('Push') {
-            when { branch 'main' }
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'github-token',
@@ -51,10 +54,11 @@ pipeline {
                     passwordVariable: 'REGISTRY_PASS'
                 )]) {
                     sh """
-                        echo \$REGISTRY_PASS | docker login ghcr.io \
-                            -u \$REGISTRY_USER --password-stdin
+                        echo \$REGISTRY_PASS | docker login ghcr.io -u \$REGISTRY_USER --password-stdin
+
                         docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
                         docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+
                         docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:latest
                         docker push ${REGISTRY}/${IMAGE_NAME}:latest
                     """
