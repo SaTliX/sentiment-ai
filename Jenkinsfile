@@ -51,21 +51,14 @@ pipeline {
             }
         }
 
-        stage('Push') {
-            when { branch 'main' }
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'github-token',
-                    usernameVariable: 'REGISTRY_USER',
-                    passwordVariable: 'REGISTRY_PASS'
-                )]) {
+            stage('Lint') {
+                steps {
                     sh """
-                        echo \$REGISTRY_PASS | docker login ghcr.io \
-                            -u \$REGISTRY_USER --password-stdin
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:latest
-                        docker push ${REGISTRY}/${IMAGE_NAME}:latest
+                        docker run --rm \
+                            -v \$WORKSPACE:/app \
+                            -w /app \
+                            python:3.11-slim \
+                            sh -c "pip install flake8 -q && flake8 src/ --max-line-length=100"
                     """
                 }
             }
