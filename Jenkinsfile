@@ -11,18 +11,14 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Branche : ${env.BRANCH_NAME}"
-                echo "Commit : ${env.GIT_COMMIT}"
                 sh 'git log --oneline -5'
             }
         }
 
         stage('Lint') {
             steps {
-                sh '''
-                    echo "pip install flake8 -q && flake8 src/ --max-line-length=100" > /tmp/lint.sh
-                    docker run --rm -v $WORKSPACE:/app -v /tmp/lint.sh:/lint.sh -w /app python:3.11-slim bash /lint.sh
-                '''
+                sh "docker build -t ${IMAGE_NAME}:lint ."
+                sh "docker run --rm ${IMAGE_NAME}:lint sh -c 'pip install flake8 -q && flake8 src/ --max-line-length=100'"
             }
         }
 
@@ -40,11 +36,6 @@ pipeline {
                         --cov-report=term-missing \
                         --cov-fail-under=70
                 """
-            }
-            post {
-                failure {
-                    echo 'Tests echoues ou coverage insuffisant (< 70%)'
-                }
             }
         }
 
