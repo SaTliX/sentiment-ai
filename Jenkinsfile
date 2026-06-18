@@ -19,7 +19,10 @@ pipeline {
 
         stage('Lint') {
             steps {
-                sh 'docker run --rm -v $WORKSPACE:/app -w /app python:3.11-slim bash -c "pip install flake8 -q && flake8 src/ --max-line-length=100"'
+                sh '''
+                    echo "pip install flake8 -q && flake8 src/ --max-line-length=100" > /tmp/lint.sh
+                    docker run --rm -v $WORKSPACE:/app -v /tmp/lint.sh:/lint.sh -w /app python:3.11-slim bash /lint.sh
+                '''
             }
         }
 
