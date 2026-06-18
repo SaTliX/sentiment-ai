@@ -27,8 +27,6 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 sh """
                     docker run --rm \
-                        -v \$WORKSPACE:/app \
-                        -w /app \
                         ${IMAGE_NAME}:${IMAGE_TAG} \
                         pytest tests/ -v \
                         --cov=src \
@@ -36,6 +34,11 @@ pipeline {
                         --cov-report=term-missing \
                         --cov-fail-under=70
                 """
+            }
+            post {
+                failure {
+                    echo 'Tests echoues ou coverage insuffisant (< 70%)'
+                }
             }
         }
 
