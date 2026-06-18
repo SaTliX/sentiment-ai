@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'sentiment-ai'
-        REGISTRY = 'ghcr.io/satiix'
+        REGISTRY = 'ghcr.io/satlix'
     }
 
     stages {
