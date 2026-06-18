@@ -19,13 +19,13 @@ pipeline {
 
         stage('Lint') {
             steps {
-                sh '''
+                sh """
                     docker run --rm \
-                        -v $(pwd):/app \
+                        -v \$WORKSPACE:/app \
                         -w /app \
                         python:3.11-slim \
                         sh -c "pip install flake8 -q && flake8 src/ --max-line-length=100"
-                '''
+                """
             }
         }
 
@@ -34,7 +34,7 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 sh """
                     docker run --rm \
-                        -v \$(pwd):/app \
+                        -v \$WORKSPACE:/app \
                         -w /app \
                         ${IMAGE_NAME}:${IMAGE_TAG} \
                         pytest tests/ -v \
@@ -46,34 +46,41 @@ pipeline {
             }
             post {
                 failure {
-                    echo 'Tests échoués ou coverage insuffisant (< 70%)'
+                    echo 'Tests echoues ou coverage insuffisant (< 70%)'
                 }
             }
         }
 
-            stage('Lint') {
-                steps {
+        stage('Push') {
+            when { branch 'main' }
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-token',
+                    usernameVariable: 'REGISTRY_USER',
+                    passwordVariable: 'REGISTRY_PASS'
+                )]) {
                     sh """
-                        docker run --rm \
-                            -v \$WORKSPACE:/app \
-                            -w /app \
-                            python:3.11-slim \
-                            sh -c "pip install flake8 -q && flake8 src/ --max-line-length=100"
+                        echo \$REGISTRY_PASS | docker login ghcr.io \
+                            -u \$REGISTRY_USER --password-stdin
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY}/${IMAGE_NAME}:latest
+                        docker push ${REGISTRY}/${IMAGE_NAME}:latest
                     """
                 }
             }
         }
-    
+    }
 
     post {
         always {
             sh 'docker compose down -v 2>/dev/null || true'
         }
         success {
-            echo "Pipeline réussi ! Image : ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Pipeline reussi ! Image : ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
         }
         failure {
-            echo 'Pipeline échoué. Consultez les logs ci-dessus.'
+            echo 'Pipeline echoue. Consultez les logs ci-dessus.'
         }
     }
 }
