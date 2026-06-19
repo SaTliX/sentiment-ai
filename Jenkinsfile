@@ -169,7 +169,7 @@ pipeline {
                 echo "Verification du deploiement staging (gere par Terraform)..."
                 sh '''
                     sleep 5
-                    curl -f http://localhost:8001/health || exit 1
+                    docker run --rm --network cicd-network curlimages/curl -f http://sentiment-staging:8000/health || exit 1
                     echo "Staging disponible sur http://localhost:8001"
                 '''
             }
