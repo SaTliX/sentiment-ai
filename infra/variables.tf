@@ -22,3 +22,9 @@ variable "registry" {
   type        = string
   default     = "ghcr.io/satlix"
 }
+
+variable "docker_host" {
+  description = "Socket Docker (Linux: unix:///var/run/docker.sock, Windows: npipe:////./pipe/docker_engine)"
+  type        = string
+  default     = "unix:///var/run/docker.sock"
+}

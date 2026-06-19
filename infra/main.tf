@@ -9,7 +9,7 @@ terraform {
 
 # Windows avec Docker Desktop
 provider "docker" {
-  host = "npipe:////./pipe/docker_engine"
+  host = var.docker_host
 }
 
 # Reseau Docker partage Jenkins / SonarQube / SentimentAI
