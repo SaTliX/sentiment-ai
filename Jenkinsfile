@@ -24,6 +24,16 @@ pipeline {
             }
         }
 
+        stage('IaC Validate') {
+            steps {
+                dir('infra') {
+                    sh 'terraform init -backend=false -input=false'
+                    sh 'terraform fmt -check'
+                    sh 'terraform validate'
+                }
+            }
+        }
+
         stage('Build & Test') {
             steps {
                 sh '''
@@ -139,12 +149,27 @@ pipeline {
                 }
             }
         }
+
+        stage('IaC Apply') {
+            steps {
+                dir('infra') {
+                    sh '''
+                        IMAGE_TAG=$(git rev-parse --short HEAD)
+                        echo "Terraform apply avec image_tag=${IMAGE_TAG}"
+
+                        terraform init -input=false
+                        terraform apply -auto-approve -var="image_tag=${IMAGE_TAG}"
+                    '''
+                }
+            }
+        }
+
         stage('Deploy Staging') {
             steps {
-                echo "Déploiement de ${REGISTRY}/${IMAGE_NAME} en staging..."
+                echo "Verification du deploiement staging (gere par Terraform)..."
                 sh '''
-                    docker compose -f docker-compose.yml -p staging down 2>/dev/null || true
-                    docker compose -f docker-compose.yml -p staging up -d
+                    sleep 5
+                    curl -f http://localhost:8001/health || exit 1
                     echo "Staging disponible sur http://localhost:8001"
                 '''
             }
@@ -153,7 +178,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker compose down -v 2>/dev/null || true'
+            sh 'docker rm -f test-runner 2>/dev/null || true'
         }
         success {
             sh '''
