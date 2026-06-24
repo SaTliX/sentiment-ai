@@ -1,4 +1,4 @@
-resource "docker_image" "prometheus" {
+$content = 'resource "docker_image" "prometheus" {
   name         = "prom/prometheus:latest"
   keep_locally = true
 }
@@ -13,11 +13,6 @@ resource "docker_container" "prometheus" {
   ports {
     internal = 9090
     external = 9090
-  }
-  volumes {
-    host_path      = abspath("${path.module}/../monitoring/prometheus.yml")
-    container_path = "/etc/prometheus/prometheus.yml"
-    read_only      = true
   }
 }
 
@@ -38,4 +33,6 @@ resource "docker_container" "grafana" {
     external = 3000
   }
   env = ["GF_SECURITY_ADMIN_PASSWORD=admin"]
-}
+}'
+
+$content | Out-File -FilePath infra\monitoring.tf -Encoding UTF8
