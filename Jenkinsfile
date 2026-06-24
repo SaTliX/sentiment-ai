@@ -174,6 +174,30 @@ pipeline {
                 '''
             }
         }
+        stage('Smoke Test') {
+            steps {
+                sh '''
+                    echo "Attente demarrage (10s)..."
+                    sleep 10
+                    docker run --rm --network cicd-network curlimages/curl -f http://sentiment-staging:8000/health || exit 1
+                    echo "/health OK"
+                    docker run --rm --network cicd-network curlimages/curl -s http://sentiment-staging:8000/metrics | grep -q sentiment_predictions_total || exit 1
+                    echo "/metrics OK"
+                    sleep 20
+                    docker run --rm --network cicd-network curlimages/curl -s "http://prometheus:9090/api/v1/query?query=up{job='sentiment-ai'}" | grep -q '"value":.*1' || exit 1
+                    echo "Prometheus scrape : UP"
+                    docker run --rm --network cicd-network curlimages/curl -f http://grafana:3000/api/health || exit 1
+                    echo "Grafana OK"
+                '''
+            }
+            post {
+                failure {
+                    sh 'docker logs prometheus || true'
+                    sh 'docker logs sentiment-staging || true'
+                    echo 'Smoke Test KO -- voir logs ci-dessus'
+                }
+            }
+        }
     }
 
     post {
