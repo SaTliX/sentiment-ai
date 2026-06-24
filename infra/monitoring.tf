@@ -1,4 +1,4 @@
-$content = 'resource "docker_image" "prometheus" {
+resource "docker_image" "prometheus" {
   name         = "prom/prometheus:latest"
   keep_locally = true
 }
@@ -33,6 +33,4 @@ resource "docker_container" "grafana" {
     external = 3000
   }
   env = ["GF_SECURITY_ADMIN_PASSWORD=admin"]
-}'
-
-$content | Out-File -FilePath infra\monitoring.tf -Encoding UTF8
+}
