@@ -1,30 +1,25 @@
 variable "image_tag" {
-  description = "Tag de l'image Docker a deployer"
+  description = "Tag de l image Docker a deployer"
   type        = string
   default     = "latest"
 }
-
-# Port 8080 reserve a Jenkins -- staging sur 8001
 variable "app_port" {
   description = "Port expose en staging"
   type        = number
   default     = 8001
 }
-
 variable "container_name" {
   description = "Nom du conteneur staging"
   type        = string
   default     = "sentiment-staging"
 }
-
 variable "registry" {
-  description = "Registry Docker (ex: ghcr.io/monpseudo)"
+  description = "Registry Docker"
   type        = string
   default     = "ghcr.io/satlix"
 }
-
 variable "docker_host" {
-  description = "Socket Docker (Linux: unix:///var/run/docker.sock, Windows: npipe:////./pipe/docker_engine)"
+  description = "Socket Docker"
   type        = string
-  default     = "unix:///var/run/docker.sock"
+  default     = "npipe:////.//pipe/docker_engine"
 }
