@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, Gauge, Histogram
 from src.schemas import PredictionRequest, PredictionResponse
@@ -45,4 +45,3 @@ def predict(request: PredictionRequest):
     except Exception:
         predictions_total.labels(label="UNKNOWN", status="error").inc()
         raise
-        
