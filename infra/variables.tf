@@ -21,5 +21,5 @@ variable "registry" {
 variable "docker_host" {
   description = "Socket Docker"
   type        = string
-  default     = "npipe:////.//pipe/docker_engine"
+  default     = "unix:///var/run/docker.sock"
 }
